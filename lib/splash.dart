@@ -1,5 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'homepage.dart';
+import 'homepage.dart'; 
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -12,58 +13,47 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    checkLoginStatus(); 
+    Timer(const Duration(seconds: 3), () {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomePage()),
+      );
+    });
   }
-
-  Future<void> checkLoginStatus() async {
-    await Future.delayed(const Duration(seconds: 3));
-
-    if (!mounted) return;
-
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => HomePage(username: "Legi")),
-    );
-  }
-
 
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
-      backgroundColor: Color(0xFF008000),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Spacer(),
-            Image(
-              image: AssetImage('assets/images/logowo.png'),
-              width: 180,
-              height: 180,
-            ),
-            SizedBox(height: 20),
-            Text(
-              'CabeTrace',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
+      body: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFFA8E063), Color(0xFF56AB2F)],
+            begin: Alignment.topRight,
+            end: Alignment.bottomLeft,
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image(
+                image: AssetImage('assets/images/icon.png'),
+                width: 150,
+                height: 150,
               ),
-            ),
-            Spacer(),
-            Padding(
-              padding: EdgeInsets.only(bottom: 40.0),
-              child: Text(
-                'Dari Daun ke Data, Semua dalam Genggaman!',
+              SizedBox(height: 24),
+              Text(
+                'Deteksi\nWereng\nOtomatis',
                 textAlign: TextAlign.center,
                 style: TextStyle(
+                  fontSize: 26,
                   color: Colors.white,
-                  fontSize: 13,
-                  height: 1.4,
+                  fontWeight: FontWeight.w600,
+                  height: 1.3,
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

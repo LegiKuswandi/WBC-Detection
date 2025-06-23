@@ -21,7 +21,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.CabeTrace"
+        applicationId = "com.example.WBC"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
@@ -37,14 +37,14 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
-    // splits {
-    //     abi {
-    //         isEnable = true
-    //         reset()
-    //         include("armeabi-v7a", "arm64-v8a")
-    //         isUniversalApk = false
-    //     }
-    // }
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("armeabi-v7a", "arm64-v8a")
+            isUniversalApk = false
+        }
+    }
 }
 
 flutter {

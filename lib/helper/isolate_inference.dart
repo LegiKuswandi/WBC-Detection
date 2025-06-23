@@ -1,5 +1,6 @@
 import 'dart:isolate';
 import 'dart:ui';
+import 'dart:math';
 import 'package:image/image.dart' as img;
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'image_detection_helper.dart';
@@ -25,13 +26,13 @@ class IsolateInference {
 
     await for (var message in port) {
       final InferenceModel model = message;
+
       final img.Image inputImage = img.copyResize(
         model.image!,
         width: model.inputShape[1],
         height: model.inputShape[2],
       );
 
-      // Normalisasi dan bentuk input [1, height, width, 3]
       final input = [
         List.generate(model.inputShape[1], (y) {
           return List.generate(model.inputShape[2], (x) {
@@ -45,48 +46,69 @@ class IsolateInference {
         })
       ];
 
-      // Bentuk output: [1, 5, 8400]
       final output = [
-        List.generate(
-          model.outputShape[1], // 5
-          (_) => List.filled(model.outputShape[2], 0.0), // 8400
-        )
+        List.generate(model.outputShape[1], (_) => List.filled(model.outputShape[2], 0.0))
       ];
 
       final interpreter = Interpreter.fromAddress(model.interpreterAddress);
       interpreter.run(input, output);
 
-      final detections = <DetectionResult>[];
+      final xList = output[0][0];
+      final yList = output[0][1];
+      final wList = output[0][2];
+      final hList = output[0][3];
+      final confList = output[0][4];
 
-      // Ambil output dari tensor
-      final raw = output[0]; // [5][8400]
-      final xList = raw[0];
-      final yList = raw[1];
-      final wList = raw[2];
-      final hList = raw[3];
-      final confList = raw[4];
+      List<DetectionResult> rawDetections = [];
 
-      for (int i = 0; i < model.outputShape[2]; i++) {
-        final x = xList[i];
-        final y = yList[i];
-        final w = wList[i];
-        final h = hList[i];
-        final confidence = confList[i];
-
+      for (int i = 0; i < confList.length; i++) {
+        double confidence = confList[i];
         if (confidence > 0.5) {
-          final label = model.labels[0]; //hanya 1 kelas
-          final rect = Rect.fromLTWH(
-            x - w / 2,
-            y - h / 2,
-            w,
-            h,
-          );
-          detections.add(DetectionResult(label, confidence, rect));
+          double x = xList[i];
+          double y = yList[i];
+          double w = wList[i];
+          double h = hList[i];
+
+          Rect rect = Rect.fromLTWH(x - w / 2, y - h / 2, w, h);
+          rawDetections.add(DetectionResult(model.labels[0], confidence, rect));
         }
       }
 
+      // Terapkan Non-Maximum Suppression
+      final detections = _nonMaxSuppression(rawDetections, iouThreshold: 0.5);
+
       model.responsePort.send(detections);
     }
+  }
+
+  static List<DetectionResult> _nonMaxSuppression(
+    List<DetectionResult> boxes, {
+    double iouThreshold = 0.5,
+  }) {
+    boxes.sort((a, b) => b.confidence.compareTo(a.confidence));
+
+    List<DetectionResult> selected = [];
+
+    while (boxes.isNotEmpty) {
+      final current = boxes.removeAt(0);
+      selected.add(current);
+
+      boxes.removeWhere((box) => _iou(current.boundingBox, box.boundingBox) > iouThreshold);
+    }
+
+    return selected;
+  }
+
+  static double _iou(Rect a, Rect b) {
+    final double x1 = max(a.left, b.left);
+    final double y1 = max(a.top, b.top);
+    final double x2 = min(a.right, b.right);
+    final double y2 = min(a.bottom, b.bottom);
+
+    final double interArea = max(0, x2 - x1) * max(0, y2 - y1);
+    final double unionArea = a.width * a.height + b.width * b.height - interArea;
+
+    return unionArea == 0 ? 0 : interArea / unionArea;
   }
 }
 
