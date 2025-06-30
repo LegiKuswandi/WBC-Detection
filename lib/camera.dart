@@ -17,8 +17,8 @@ class CameraPage extends StatefulWidget {
 class _CameraPageState extends State<CameraPage> {
   CameraController? _controller;
   List<CameraDescription>? cameras;
-
   final ImageDetectionHelper _detectionHelper = ImageDetectionHelper();
+  bool _isProcessing = false;
 
   @override
   void initState() {
@@ -46,7 +46,11 @@ class _CameraPageState extends State<CameraPage> {
   }
 
   Future<void> _analyzeImage() async {
-    if (_controller != null && _controller!.value.isInitialized) {
+    if (_controller != null && _controller!.value.isInitialized && !_isProcessing) {
+      setState(() {
+        _isProcessing = true;
+      });
+
       try {
         final XFile image = await _controller!.takePicture();
         final bytes = await image.readAsBytes();
@@ -55,6 +59,7 @@ class _CameraPageState extends State<CameraPage> {
         if (decoded != null) {
           final results = await _detectionHelper.inferenceImage(decoded);
 
+          if (!mounted) return;
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -67,6 +72,12 @@ class _CameraPageState extends State<CameraPage> {
         }
       } catch (e) {
         print("Gagal mengambil gambar: $e");
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isProcessing = false;
+          });
+        }
       }
     }
   }
@@ -79,51 +90,56 @@ class _CameraPageState extends State<CameraPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              const SizedBox(height: 30),
-              const Text(
-                "Arahkan ke objek",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 20),
-              Center(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(30),
-                  child: Container(
-                    width: cameraSize,
-                    height: cameraSize,
-                    color: Colors.black,
-                    child: _controller != null && _controller!.value.isInitialized
-                        ? CameraPreview(_controller!)
-                        : const Center(child: CircularProgressIndicator()),
+        child: AbsorbPointer(
+          absorbing: _isProcessing, // Nonaktifkan interaksi saat loading
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                const SizedBox(height: 30),
+                const Text(
+                  "Arahkan ke objek",
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 20),
+                Center(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(30),
+                    child: Container(
+                      width: cameraSize,
+                      height: cameraSize,
+                      color: Colors.black,
+                      child: _controller != null && _controller!.value.isInitialized
+                          ? CameraPreview(_controller!)
+                          : const Center(child: CircularProgressIndicator()),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 30),
-              GestureDetector(
-                onTap: _analyzeImage,
-                child: Column(
-                  children: [
-                    Container(
-                      width: 70,
-                      height: 70,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.black, width: 3),
+                const SizedBox(height: 30),
+                GestureDetector(
+                  onTap: _analyzeImage,
+                  child: Column(
+                    children: [
+                      _isProcessing
+                          ? const CircularProgressIndicator()
+                          : Container(
+                              width: 70,
+                              height: 70,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.black, width: 3),
+                              ),
+                            ),
+                      const SizedBox(height: 10),
+                      Text(
+                        _isProcessing ? "Sedang menganalisis..." : "Lakukan Analisis",
+                        style: const TextStyle(fontSize: 16),
                       ),
-                    ),
-                    const SizedBox(height: 10),
-                    const Text(
-                      "Lakukan Analisis",
-                      style: TextStyle(fontSize: 16),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 30),
-            ],
+                const SizedBox(height: 30),
+              ],
+            ),
           ),
         ),
       ),

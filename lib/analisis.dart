@@ -15,13 +15,52 @@ class AnalysisResultPage extends StatelessWidget {
 
   String _generateRecommendation(int count) {
     if (count == 0) {
-      return "Tidak ada WBC terdeteksi.\nLakukan monitoring rutin tiap minggu.";
+      return '''
+Tidak ada Wereng Batang Coklat (WBC) terdeteksi.
+Lakukan monitoring rutin setiap minggu, mulai sejak masa pembibitan.
+
+Rekomendasi Pencegahan (Tindakan Preventif):
+1. Tanaman:
+   - Gunakan varietas tahan WBC seperti Inpari 33 atau Inpari 47.
+   - Lakukan rotasi tanaman dan pergiliran varietas antar musim tanam.
+2. Pupuk dan tanah:
+   - Berikan pupuk secara berimbang sesuai hasil uji tanah atau peta status hara.
+3. Lingkungan:
+   - Terapkan sistem pengairan basah-kering dan jaga sanitasi lahan.
+4. Aspek sosial:
+   - Laksanakan tanam serempak di satu hamparan dengan perbedaan waktu maksimal 7–14 hari antar petani.
+''';
     } else if (count < 5) {
-      return "Populasi rendah ($count ekor).\nGunakan musuh alami seperti Beauveria bassiana atau Metarhizium sp.";
+      return '''
+Populasi WBC rendah ($count ekor per gambar).
+Lakukan pemantauan rutin setiap minggu.
+
+Pengendalian yang disarankan:
+- Gunakan musuh alami seperti agensia hayati Beauveria bassiana, Metarhizium sp., atau Hirsutella sp.
+- Lakukan penyemprotan secara merata dan serempak dalam satu hamparan pertanaman.
+''';
     } else if (count >= 5 && count < 10) {
-      return "Populasi sedang ($count ekor).\nGunakan insektisida sistemik berbahan pymetrozin atau triflumezopyrim.";
+      return '''
+Populasi WBC sedang ($count ekor per gambar).
+Lakukan pengendalian untuk mencegah peningkatan populasi.
+
+Pengendalian yang disarankan:
+- Gunakan insektisida sistemik berbahan aktif pymetrozin atau triflumezopyrim.
+- Jika wereng masih berupa nimfa, gunakan insektisida berbahan aktif buprofezin.
+- Lakukan penyemprotan secara serempak dalam satu hamparan.
+''';
     } else {
-      return "Populasi tinggi ($count ekor).\nGunakan insektisida sistemik atau kontak seperti dinotefuran.\nJika masih nimfa, gunakan buprofezin.";
+      return '''
+Populasi WBC tinggi ($count ekor per gambar).
+Pengendalian intensif harus segera dilakukan untuk mencegah kerusakan parah.
+
+Pengendalian yang disarankan:
+- Gunakan insektisida sistemik seperti pymetrozin atau triflumezopyrim.
+- Gunakan insektisida kontak seperti dinotefuran.
+- Jika wereng masih berupa nimfa, gunakan insektisida berbahan aktif buprofezin.
+- Lakukan penyemprotan serempak dalam satu hamparan.
+- Jika sudah terjadi hopper burn, pertimbangkan untuk melakukan panen lebih awal (eradikasi).
+''';
     }
   }
 
@@ -47,9 +86,9 @@ class AnalysisResultPage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 30),
-              Text(
+              const Text(
                 "Hasil Deteksi",
-                style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
               Text(
@@ -60,7 +99,7 @@ class AnalysisResultPage extends StatelessWidget {
               const SizedBox(height: 20),
               Text(
                 recommendation,
-                textAlign: TextAlign.center,
+                textAlign: TextAlign.left,
                 style: const TextStyle(fontSize: 16, color: Colors.black87),
               ),
               const SizedBox(height: 40),
